@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">CellScope</string>
+    <string name="recording_channel_name">Battery recording</string>
+    <string name="recording_channel_description">Shows while CellScope continuously records battery telemetry</string>
+</resources>
