@@ -1,0 +1,433 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 5,
+    "identityHash": "9c6ed78ca0c5e4fd579cdae848e94cab",
+    "entities": [
+      {
+        "tableName": "battery_samples",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `wallTimeMs` INTEGER NOT NULL, `elapsedRealtimeMs` INTEGER NOT NULL, `levelPercent` REAL, `chargeCounterUah` INTEGER, `currentNowUa` INTEGER, `currentAverageUa` INTEGER, `energyCounterNwh` INTEGER, `voltageMv` INTEGER, `temperatureDeciC` INTEGER, `status` INTEGER NOT NULL, `plugSource` INTEGER NOT NULL, `health` INTEGER NOT NULL, `isPresent` INTEGER NOT NULL, `chargeFullUah` INTEGER, `chargeFullDesignUah` INTEGER, `chargeVoltageLimitMv` INTEGER, `chargeVoltageDesignLimitMv` INTEGER, `chargeStartThresholdPercent` INTEGER, `chargeEndThresholdPercent` INTEGER, `cycleCount` INTEGER, `voltageOcvMv` INTEGER, `resistanceMicroOhm` INTEGER, `technology` TEXT, `chargeType` TEXT, `powerSupplyType` TEXT, `inputCurrentLimitUa` INTEGER, `inputVoltageLimitMv` INTEGER, `fuelGaugeRawSoc` INTEGER, `chargeCurrentLimitUa` INTEGER, `inputCurrentLimited` INTEGER, `aiclComplete` INTEGER, `restrictedCharging` INTEGER, `batteryChargingEnabled` INTEGER, `chargingEnabled` INTEGER, `safetyTimerEnabled` INTEGER, `chargerOverVoltage` INTEGER, `overload` INTEGER, `usbOverheat` INTEGER, `batteryProfile` TEXT, `batteryIdResistanceOhm` INTEGER, `jeitaCoolDeciC` INTEGER, `jeitaWarmDeciC` INTEGER, `socReportingReady` INTEGER, `esrCount` INTEGER, `cycleCountBins` TEXT, `usbPresent` INTEGER, `usbOnline` INTEGER, `usbCurrentMaxUa` INTEGER, `usbVoltageMaxMv` INTEGER, `usbOtg` INTEGER, `usbHealth` TEXT, `dcPresent` INTEGER, `dcOnline` INTEGER, `dcCurrentMaxUa` INTEGER, `dcChargingEnabled` INTEGER, `dcType` TEXT, `parallelPresent` INTEGER, `parallelChargingEnabled` INTEGER, `parallelStatus` TEXT, `parallelCurrentMaxUa` INTEGER, `parallelChargeCurrentLimitUa` INTEGER, `parallelVoltageMaxMv` INTEGER, `parallelInputCurrentLimited` INTEGER, `sysfsProvider` TEXT, `sysfsFallbackFields` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "wallTimeMs",
+            "columnName": "wallTimeMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "elapsedRealtimeMs",
+            "columnName": "elapsedRealtimeMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "levelPercent",
+            "columnName": "levelPercent",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "chargeCounterUah",
+            "columnName": "chargeCounterUah",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "currentNowUa",
+            "columnName": "currentNowUa",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "currentAverageUa",
+            "columnName": "currentAverageUa",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "energyCounterNwh",
+            "columnName": "energyCounterNwh",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "voltageMv",
+            "columnName": "voltageMv",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "temperatureDeciC",
+            "columnName": "temperatureDeciC",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "plugSource",
+            "columnName": "plugSource",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "health",
+            "columnName": "health",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isPresent",
+            "columnName": "isPresent",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chargeFullUah",
+            "columnName": "chargeFullUah",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "chargeFullDesignUah",
+            "columnName": "chargeFullDesignUah",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "chargeVoltageLimitMv",
+            "columnName": "chargeVoltageLimitMv",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "chargeVoltageDesignLimitMv",
+            "columnName": "chargeVoltageDesignLimitMv",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "chargeStartThresholdPercent",
+            "columnName": "chargeStartThresholdPercent",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "chargeEndThresholdPercent",
+            "columnName": "chargeEndThresholdPercent",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "cycleCount",
+            "columnName": "cycleCount",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "voltageOcvMv",
+            "columnName": "voltageOcvMv",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "resistanceMicroOhm",
+            "columnName": "resistanceMicroOhm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "technology",
+            "columnName": "technology",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "chargeType",
+            "columnName": "chargeType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "powerSupplyType",
+            "columnName": "powerSupplyType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "inputCurrentLimitUa",
+            "columnName": "inputCurrentLimitUa",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "inputVoltageLimitMv",
+            "columnName": "inputVoltageLimitMv",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fuelGaugeRawSoc",
+            "columnName": "fuelGaugeRawSoc",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "chargeCurrentLimitUa",
+            "columnName": "chargeCurrentLimitUa",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "inputCurrentLimited",
+            "columnName": "inputCurrentLimited",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "aiclComplete",
+            "columnName": "aiclComplete",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "restrictedCharging",
+            "columnName": "restrictedCharging",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "batteryChargingEnabled",
+            "columnName": "batteryChargingEnabled",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "chargingEnabled",
+            "columnName": "chargingEnabled",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "safetyTimerEnabled",
+            "columnName": "safetyTimerEnabled",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "chargerOverVoltage",
+            "columnName": "chargerOverVoltage",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "overload",
+            "columnName": "overload",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "usbOverheat",
+            "columnName": "usbOverheat",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "batteryProfile",
+            "columnName": "batteryProfile",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "batteryIdResistanceOhm",
+            "columnName": "batteryIdResistanceOhm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "jeitaCoolDeciC",
+            "columnName": "jeitaCoolDeciC",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "jeitaWarmDeciC",
+            "columnName": "jeitaWarmDeciC",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "socReportingReady",
+            "columnName": "socReportingReady",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "esrCount",
+            "columnName": "esrCount",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "cycleCountBins",
+            "columnName": "cycleCountBins",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "usbPresent",
+            "columnName": "usbPresent",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "usbOnline",
+            "columnName": "usbOnline",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "usbCurrentMaxUa",
+            "columnName": "usbCurrentMaxUa",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "usbVoltageMaxMv",
+            "columnName": "usbVoltageMaxMv",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "usbOtg",
+            "columnName": "usbOtg",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "usbHealth",
+            "columnName": "usbHealth",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dcPresent",
+            "columnName": "dcPresent",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "dcOnline",
+            "columnName": "dcOnline",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "dcCurrentMaxUa",
+            "columnName": "dcCurrentMaxUa",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "dcChargingEnabled",
+            "columnName": "dcChargingEnabled",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "dcType",
+            "columnName": "dcType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "parallelPresent",
+            "columnName": "parallelPresent",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "parallelChargingEnabled",
+            "columnName": "parallelChargingEnabled",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "parallelStatus",
+            "columnName": "parallelStatus",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "parallelCurrentMaxUa",
+            "columnName": "parallelCurrentMaxUa",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "parallelChargeCurrentLimitUa",
+            "columnName": "parallelChargeCurrentLimitUa",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "parallelVoltageMaxMv",
+            "columnName": "parallelVoltageMaxMv",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "parallelInputCurrentLimited",
+            "columnName": "parallelInputCurrentLimited",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "sysfsProvider",
+            "columnName": "sysfsProvider",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sysfsFallbackFields",
+            "columnName": "sysfsFallbackFields",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_battery_samples_wallTimeMs",
+            "unique": false,
+            "columnNames": [
+              "wallTimeMs"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_battery_samples_wallTimeMs` ON `${TABLE_NAME}` (`wallTimeMs`)"
+          },
+          {
+            "name": "index_battery_samples_elapsedRealtimeMs",
+            "unique": false,
+            "columnNames": [
+              "elapsedRealtimeMs"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_battery_samples_elapsedRealtimeMs` ON `${TABLE_NAME}` (`elapsedRealtimeMs`)"
+          }
+        ]
+      },
+      {
+        "tableName": "timeline_gaps",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `startedAtMs` INTEGER NOT NULL, `endedAtMs` INTEGER, `reason` TEXT NOT NULL, `details` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedAtMs",
+            "columnName": "startedAtMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endedAtMs",
+            "columnName": "endedAtMs",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "reason",
+            "columnName": "reason",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "details",
+            "columnName": "details",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_timeline_gaps_startedAtMs",
+            "unique": false,
+            "columnNames": [
+              "startedAtMs"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_timeline_gaps_startedAtMs` ON `${TABLE_NAME}` (`startedAtMs`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9c6ed78ca0c5e4fd579cdae848e94cab')"
+    ]
+  }
+}

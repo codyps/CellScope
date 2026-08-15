@@ -37,7 +37,7 @@ class RecordingService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        reader = BatteryReader(this)
+        reader = BatteryReader(this, (application as CellScopeApplication).sysfsAccess)
         preferences = RecordingPreferences(this)
         createChannel()
     }
@@ -151,7 +151,7 @@ class RecordingService : Service() {
             )
         }
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_lock_idle_charging)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("CellScope is monitoring")
             .setContentText(detail)
             .setContentIntent(openIntent)

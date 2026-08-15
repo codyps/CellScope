@@ -47,7 +47,7 @@ interface BatteryDao {
 
 @Database(
     entities = [BatterySample::class, TimelineGap::class],
-    version = 2,
+    version = 5,
     exportSchema = true,
 )
 abstract class CellScopeDatabase : RoomDatabase() {
@@ -103,10 +103,77 @@ abstract class CellScopeDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN chargeFullUah INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN chargeFullDesignUah INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN cycleCount INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN voltageOcvMv INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN resistanceMicroOhm INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN technology TEXT")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN chargeType TEXT")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN powerSupplyType TEXT")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN inputCurrentLimitUa INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN inputVoltageLimitMv INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN sysfsProvider TEXT")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN sysfsFallbackFields TEXT")
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN chargeVoltageLimitMv INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN chargeVoltageDesignLimitMv INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN chargeStartThresholdPercent INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN chargeEndThresholdPercent INTEGER")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN fuelGaugeRawSoc INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN chargeCurrentLimitUa INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN inputCurrentLimited INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN aiclComplete INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN restrictedCharging INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN batteryChargingEnabled INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN chargingEnabled INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN safetyTimerEnabled INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN chargerOverVoltage INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN overload INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN usbOverheat INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN batteryProfile TEXT")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN batteryIdResistanceOhm INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN jeitaCoolDeciC INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN jeitaWarmDeciC INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN socReportingReady INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN esrCount INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN cycleCountBins TEXT")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN usbPresent INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN usbOnline INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN usbCurrentMaxUa INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN usbVoltageMaxMv INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN usbOtg INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN usbHealth TEXT")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN dcPresent INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN dcOnline INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN dcCurrentMaxUa INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN dcChargingEnabled INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN dcType TEXT")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN parallelPresent INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN parallelChargingEnabled INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN parallelStatus TEXT")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN parallelCurrentMaxUa INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN parallelChargeCurrentLimitUa INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN parallelVoltageMaxMv INTEGER")
+                db.execSQL("ALTER TABLE battery_samples ADD COLUMN parallelInputCurrentLimited INTEGER")
+            }
+        }
+
         fun create(context: Context): CellScopeDatabase = Room.databaseBuilder(
             context,
             CellScopeDatabase::class.java,
             "cellscope.db",
-        ).addMigrations(MIGRATION_1_2).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
     }
 }

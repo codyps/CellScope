@@ -31,8 +31,8 @@ import kotlinx.coroutines.withContext
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val app = application as CellScopeApplication
-    private val dao = app.database.batteryDao()
-    private val reader = BatteryReader(app)
+    private val dao by lazy { app.database.batteryDao() }
+    private val reader by lazy { BatteryReader(app, app.sysfsAccess) }
     private val preferences = RecordingPreferences(app)
 
     private val _liveReading = MutableStateFlow<BatteryReading?>(null)
@@ -53,12 +53,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val rangeStart = _timelineRange.map { range ->
         range.durationMs?.let { System.currentTimeMillis() - it } ?: 0L
     }
-    val samples = rangeStart.flatMapLatest(dao::observeSamplesSince)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-    val gaps = rangeStart.flatMapLatest { dao.observeGapsSince(it, System.currentTimeMillis()) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-    val sampleCount = dao.observeSampleCount()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    val samples by lazy {
+        rangeStart.flatMapLatest(dao::observeSamplesSince)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    }
+    val gaps by lazy {
+        rangeStart.flatMapLatest { dao.observeGapsSince(it, System.currentTimeMillis()) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    }
+    val sampleCount by lazy {
+        dao.observeSampleCount()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    }
+    val sysfsAccess by lazy { app.sysfsAccess.state }
 
     init {
         viewModelScope.launch {
@@ -100,13 +107,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun requestShizukuAccess() {
+        app.sysfsAccess.requestShizukuPermission()
+    }
+
+    fun setRootAccess(enabled: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) { app.sysfsAccess.setRootEnabled(enabled) }
+    }
+
     suspend fun csv(samples: List<BatterySample>, gaps: List<TimelineGap>): String = withContext(Dispatchers.Default) {
         buildString {
-            appendLine("# CellScope continuous timeline CSV v2")
+            appendLine("# CellScope continuous timeline CSV v5")
             gaps.forEach { gap ->
                 appendLine("# gap,${iso(gap.startedAtMs)},${gap.endedAtMs?.let(::iso).orEmpty()},${GapReason.label(gap.reason)}")
             }
-            appendLine("timestamp_iso,elapsed_ms,level_percent,charge_uah,current_now_ua,current_average_ua,energy_nwh,voltage_mv,temperature_deci_c,status,plug_source,health,present")
+            appendLine("timestamp_iso,elapsed_ms,level_percent,charge_uah,current_now_ua,current_average_ua,energy_nwh,voltage_mv,temperature_deci_c,status,plug_source,health,present,charge_full_uah,charge_full_design_uah,charge_voltage_limit_mv,charge_voltage_design_limit_mv,charge_start_threshold_percent,charge_end_threshold_percent,cycle_count,voltage_ocv_mv,resistance_micro_ohm,technology,charge_type,power_supply_type,input_current_limit_ua,input_voltage_limit_mv,fuel_gauge_raw_soc,charge_current_limit_ua,input_current_limited,aicl_complete,restricted_charging,battery_charging_enabled,charging_enabled,safety_timer_enabled,charger_over_voltage,overload,usb_overheat,battery_profile,battery_id_resistance_ohm,jeita_cool_deci_c,jeita_warm_deci_c,soc_reporting_ready,esr_count,cycle_count_bins,usb_present,usb_online,usb_current_max_ua,usb_voltage_max_mv,usb_otg,usb_health,dc_present,dc_online,dc_current_max_ua,dc_charging_enabled,dc_type,parallel_present,parallel_charging_enabled,parallel_status,parallel_current_max_ua,parallel_charge_current_limit_ua,parallel_voltage_max_mv,parallel_input_current_limited,sysfs_provider,sysfs_fallback_fields")
             samples.forEach { sample ->
                 appendLine(listOf(
                     iso(sample.wallTimeMs),
@@ -122,6 +137,58 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     sample.plugSource,
                     sample.health,
                     sample.isPresent,
+                    sample.chargeFullUah.orEmpty(),
+                    sample.chargeFullDesignUah.orEmpty(),
+                    sample.chargeVoltageLimitMv.orEmpty(),
+                    sample.chargeVoltageDesignLimitMv.orEmpty(),
+                    sample.chargeStartThresholdPercent.orEmpty(),
+                    sample.chargeEndThresholdPercent.orEmpty(),
+                    sample.cycleCount.orEmpty(),
+                    sample.voltageOcvMv.orEmpty(),
+                    sample.resistanceMicroOhm.orEmpty(),
+                    sample.technology.csv(),
+                    sample.chargeType.csv(),
+                    sample.powerSupplyType.csv(),
+                    sample.inputCurrentLimitUa.orEmpty(),
+                    sample.inputVoltageLimitMv.orEmpty(),
+                    sample.fuelGaugeRawSoc.orEmpty(),
+                    sample.chargeCurrentLimitUa.orEmpty(),
+                    sample.inputCurrentLimited.orEmpty(),
+                    sample.aiclComplete.orEmpty(),
+                    sample.restrictedCharging.orEmpty(),
+                    sample.batteryChargingEnabled.orEmpty(),
+                    sample.chargingEnabled.orEmpty(),
+                    sample.safetyTimerEnabled.orEmpty(),
+                    sample.chargerOverVoltage.orEmpty(),
+                    sample.overload.orEmpty(),
+                    sample.usbOverheat.orEmpty(),
+                    sample.batteryProfile.csv(),
+                    sample.batteryIdResistanceOhm.orEmpty(),
+                    sample.jeitaCoolDeciC.orEmpty(),
+                    sample.jeitaWarmDeciC.orEmpty(),
+                    sample.socReportingReady.orEmpty(),
+                    sample.esrCount.orEmpty(),
+                    sample.cycleCountBins.csv(),
+                    sample.usbPresent.orEmpty(),
+                    sample.usbOnline.orEmpty(),
+                    sample.usbCurrentMaxUa.orEmpty(),
+                    sample.usbVoltageMaxMv.orEmpty(),
+                    sample.usbOtg.orEmpty(),
+                    sample.usbHealth.csv(),
+                    sample.dcPresent.orEmpty(),
+                    sample.dcOnline.orEmpty(),
+                    sample.dcCurrentMaxUa.orEmpty(),
+                    sample.dcChargingEnabled.orEmpty(),
+                    sample.dcType.csv(),
+                    sample.parallelPresent.orEmpty(),
+                    sample.parallelChargingEnabled.orEmpty(),
+                    sample.parallelStatus.csv(),
+                    sample.parallelCurrentMaxUa.orEmpty(),
+                    sample.parallelChargeCurrentLimitUa.orEmpty(),
+                    sample.parallelVoltageMaxMv.orEmpty(),
+                    sample.parallelInputCurrentLimited.orEmpty(),
+                    sample.sysfsProvider.orEmpty(),
+                    sample.sysfsFallbackFields.orEmpty(),
                 ).joinToString(","))
             }
         }
@@ -133,4 +200,5 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     ).format(Date(timestamp))
 
     private fun Any?.orEmpty(): String = this?.toString() ?: ""
+    private fun String?.csv(): String = this?.let { "\"${it.replace("\"", "\"\"")}\"" } ?: ""
 }
