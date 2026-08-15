@@ -11,6 +11,7 @@ import app.cellscope.data.TimelineGap
 import app.cellscope.data.TimelineRange
 import app.cellscope.recording.RecordingPreferences
 import app.cellscope.recording.RecordingService
+import app.cellscope.update.UpdateState
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -66,6 +67,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
     }
     val sysfsAccess by lazy { app.sysfsAccess.state }
+    val updateState: StateFlow<UpdateState> = app.updates.state
 
     init {
         viewModelScope.launch {
@@ -114,6 +116,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setRootAccess(enabled: Boolean) {
         viewModelScope.launch(Dispatchers.IO) { app.sysfsAccess.setRootEnabled(enabled) }
     }
+
+    fun checkForUpdates() = app.updates.checkNow()
 
     suspend fun csv(samples: List<BatterySample>, gaps: List<TimelineGap>): String = withContext(Dispatchers.Default) {
         buildString {

@@ -1,0 +1,3 @@
+creation_rules:
+  - path_regex: ^secrets/android-signing\.yaml$
+    pgp: 881CEAC38C98647F6F660956794D748B8B8BF912

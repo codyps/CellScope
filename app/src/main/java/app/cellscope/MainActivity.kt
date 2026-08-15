@@ -1,10 +1,12 @@
 package app.cellscope
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -74,6 +76,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.net.toUri
 import app.cellscope.data.BatteryReading
 import app.cellscope.data.BatterySample
 import app.cellscope.data.ChartMetric
@@ -84,6 +87,8 @@ import app.cellscope.data.categoryFor
 import app.cellscope.data.hasValueFor
 import app.cellscope.data.valueFor
 import app.cellscope.battery.SysfsAccessState
+import app.cellscope.update.UpdateState
+import java.io.File
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
@@ -91,25 +96,63 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
+    private var pendingInstall: File? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { CellScopeTheme { CellScopeApp(viewModel) } }
+        setContent { CellScopeTheme { CellScopeApp(viewModel, ::requestUpdateInstall) } }
+        handleIntent(intent)
     }
 
     override fun onStart() {
         super.onStart()
         viewModel.ensureRecording()
     }
+
+    override fun onResume() {
+        super.onResume()
+        val apk = pendingInstall
+        if (apk != null && packageManager.canRequestPackageInstalls()) {
+            pendingInstall = null
+            startActivity((application as CellScopeApplication).updates.installIntent(apk))
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.action != ACTION_INSTALL_UPDATE) return
+        val ready = viewModel.updateState.value as? UpdateState.Ready ?: return
+        requestUpdateInstall(ready.apk)
+    }
+
+    private fun requestUpdateInstall(apk: File) {
+        if (!packageManager.canRequestPackageInstalls()) {
+            pendingInstall = apk
+            startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, "package:$packageName".toUri()))
+            return
+        }
+        startActivity((application as CellScopeApplication).updates.installIntent(apk))
+    }
+
+    companion object {
+        const val ACTION_INSTALL_UPDATE = "app.cellscope.action.INSTALL_UPDATE"
+    }
 }
 
 private enum class Screen { LIVE, TIMELINE, SETTINGS }
 
 @Composable
-private fun CellScopeApp(viewModel: MainViewModel) {
+private fun CellScopeApp(viewModel: MainViewModel, onInstallUpdate: (File) -> Unit) {
     var screen by remember { mutableStateOf(Screen.LIVE) }
     val enabled by viewModel.recordingEnabled.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val updateState by viewModel.updateState.collectAsStateWithLifecycle()
+    var dismissedUpdate by remember { mutableStateOf<String?>(null) }
     var requestedNotification by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
 
@@ -151,8 +194,18 @@ private fun CellScopeApp(viewModel: MainViewModel) {
         when (screen) {
             Screen.LIVE -> LiveRoute(viewModel, enabled, Modifier.padding(padding))
             Screen.TIMELINE -> TimelineRoute(viewModel, Modifier.padding(padding))
-            Screen.SETTINGS -> SettingsRoute(viewModel, enabled, Modifier.padding(padding))
+            Screen.SETTINGS -> SettingsRoute(viewModel, enabled, onInstallUpdate, Modifier.padding(padding))
         }
+    }
+    val ready = updateState as? UpdateState.Ready
+    if (ready != null && dismissedUpdate != ready.version) {
+        AlertDialog(
+            onDismissRequest = { dismissedUpdate = ready.version },
+            title = { Text("CellScope ${ready.version} is ready") },
+            text = { Text("The update was downloaded and verified. Android will ask you to approve replacing the app.") },
+            confirmButton = { Button(onClick = { onInstallUpdate(ready.apk) }) { Text("Install update") } },
+            dismissButton = { TextButton(onClick = { dismissedUpdate = ready.version }) { Text("Later") } },
+        )
     }
 }
 
@@ -173,11 +226,17 @@ private fun TimelineRoute(viewModel: MainViewModel, modifier: Modifier) {
 }
 
 @Composable
-private fun SettingsRoute(viewModel: MainViewModel, enabled: Boolean, modifier: Modifier) {
+private fun SettingsRoute(
+    viewModel: MainViewModel,
+    enabled: Boolean,
+    onInstallUpdate: (File) -> Unit,
+    modifier: Modifier,
+) {
     val interval by viewModel.sampleIntervalMs.collectAsStateWithLifecycle()
     val collapseGaps by viewModel.collapseGaps.collectAsStateWithLifecycle()
     val sampleCount by viewModel.sampleCount.collectAsStateWithLifecycle()
     val sysfsAccess by viewModel.sysfsAccess.collectAsStateWithLifecycle()
+    val updateState by viewModel.updateState.collectAsStateWithLifecycle()
     SettingsScreen(
         recordingEnabled = enabled,
         intervalMs = interval,
@@ -190,6 +249,9 @@ private fun SettingsRoute(viewModel: MainViewModel, enabled: Boolean, modifier: 
         onDeleteAll = viewModel::deleteAllData,
         onRequestShizuku = viewModel::requestShizukuAccess,
         onRootAccess = viewModel::setRootAccess,
+        updateState = updateState,
+        onCheckForUpdates = viewModel::checkForUpdates,
+        onInstallUpdate = onInstallUpdate,
         modifier = modifier,
     )
 }
@@ -821,6 +883,9 @@ private fun SettingsScreen(
     onDeleteAll: () -> Unit,
     onRequestShizuku: () -> Unit,
     onRootAccess: (Boolean) -> Unit,
+    updateState: UpdateState,
+    onCheckForUpdates: () -> Unit,
+    onInstallUpdate: (File) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showIntervals by remember { mutableStateOf(false) }
@@ -868,6 +933,31 @@ private fun SettingsScreen(
             onCheckedChange = onRootAccess,
         )
         HorizontalDivider()
+        Text("App updates", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Card(shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("CellScope ${BuildConfig.VERSION_NAME}", fontWeight = FontWeight.SemiBold)
+                Text(updateStatusText(updateState), style = MaterialTheme.typography.bodySmall)
+                val readyUpdate = updateState as? UpdateState.Ready
+                if (readyUpdate != null) {
+                    Button(onClick = { onInstallUpdate(readyUpdate.apk) }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Install ${readyUpdate.version}")
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = onCheckForUpdates,
+                        enabled = updateState !is UpdateState.Checking && updateState !is UpdateState.Downloading,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Check now") }
+                }
+            }
+        }
+        Text(
+            "CellScope checks GitHub once a day, downloads only a checksum-verified APK signed by the installed app key, and asks Android to install it. Android requires your approval before replacement.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        HorizontalDivider()
         Text("Timeline", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         SettingSwitch(
             title = "Collapse gaps by default",
@@ -877,7 +967,7 @@ private fun SettingsScreen(
         )
         HorizontalDivider()
         Text("Stored data", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text("$sampleCount samples stored locally. CellScope has no internet permission.")
+        Text("$sampleCount samples stored locally. Network access is used only to check and download app updates from GitHub.")
         OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) { Text("Delete all timeline data") }
         Text(
             "Android can restart the sticky recorder after ordinary process termination. A force-stop or the system Active Apps Stop control intentionally prevents immediate restart; CellScope annotates that interruption on the next launch.",
@@ -912,6 +1002,15 @@ private fun SettingsScreen(
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
         )
     }
+}
+
+private fun updateStatusText(state: UpdateState): String = when (state) {
+    UpdateState.Idle -> "Automatic update checks are enabled."
+    UpdateState.Checking -> "Checking for an update…"
+    UpdateState.Current -> "CellScope is up to date."
+    is UpdateState.Downloading -> "Downloading ${state.version}…"
+    is UpdateState.Ready -> "Version ${state.version} is downloaded and verified."
+    is UpdateState.Error -> "Last check failed: ${state.message}"
 }
 
 @Composable

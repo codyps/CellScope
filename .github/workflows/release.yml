@@ -30,8 +30,29 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Test and build APK
-        run: ./gradlew testDebugUnitTest assembleDebug
+      - name: Restore release signing key
+        env:
+          ANDROID_SIGNING_KEY_BASE64: ${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}
+          ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          for name in ANDROID_SIGNING_KEY_BASE64 ANDROID_SIGNING_STORE_PASSWORD ANDROID_SIGNING_KEY_ALIAS ANDROID_SIGNING_KEY_PASSWORD; do
+            if [[ -z "${!name}" ]]; then
+              echo "$name is not configured" >&2
+              exit 1
+            fi
+          done
+          printf '%s' "$ANDROID_SIGNING_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/cellscope-release.jks"
+
+      - name: Test and build signed APK
+        env:
+          CELLSCOPE_SIGNING_STORE_FILE: ${{ runner.temp }}/cellscope-release.jks
+          CELLSCOPE_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          CELLSCOPE_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          CELLSCOPE_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+        run: ./gradlew testDebugUnitTest assembleRelease
 
       - name: Read release version
         id: version
@@ -47,7 +68,7 @@ jobs:
       - name: Prepare release files
         shell: bash
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk "CellScope-${{ steps.version.outputs.tag }}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "CellScope-${{ steps.version.outputs.tag }}.apk"
           sha256sum "CellScope-${{ steps.version.outputs.tag }}.apk" > "CellScope-${{ steps.version.outputs.tag }}.apk.sha256"
 
       - name: Create tag and GitHub release

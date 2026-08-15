@@ -4,3 +4,9 @@ local.properties
 **/build/
 *.iml
 .DS_Store
+
+# Signing material may only be committed in its SOPS-encrypted form.
+secrets/*
+!secrets/android-signing.yaml
+*.jks
+*.keystore

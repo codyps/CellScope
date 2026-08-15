@@ -15,7 +15,7 @@ CellScope is a local-first Android battery telemetry recorder. It displays live 
 - Explicit “Not reported” state for device-dependent properties
 - Optional read-only Linux power-supply telemetry through direct sysfs, Shizuku/Sui, or a cached libsu root shell
 - Extended fuel-gauge, charge-policy, JEITA, USB/DC/parallel-input, and cycle-depth details when the device exposes them
-- No internet permission
+- Daily GitHub release checks with verified in-app APK downloads and an Android-controlled install prompt
 
 ## Build
 
@@ -26,6 +26,29 @@ Requirements: JDK 17 or newer and Android SDK Platform 35.
 ```
 
 The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
+
+## Updates and release signing
+
+CellScope checks the repository's latest GitHub release at startup (at most once every six hours) and with a daily background job. When a newer numeric version is available, it downloads the release APK and its `.sha256` sidecar, verifies the checksum, application ID, increasing version code, and signing certificate, then offers the APK to Android's package installer. Android requires the user to grant CellScope permission to request installs and confirm each replacement; ordinary apps cannot silently replace themselves.
+
+Release APKs must use the same protected signing key forever. Configure these GitHub Actions secrets before running the release workflow:
+
+- `ANDROID_SIGNING_KEY_BASE64`: the release JKS encoded as one base64 string
+- `ANDROID_SIGNING_STORE_PASSWORD`
+- `ANDROID_SIGNING_KEY_ALIAS`
+- `ANDROID_SIGNING_KEY_PASSWORD`
+
+The signing key and credentials are committed only as `secrets/android-signing.yaml`, encrypted by SOPS for GPG fingerprint `881CEAC38C98647F6F660956794D748B8B8BF912`. To decrypt it and configure all four repository secrets without writing plaintext files, run:
+
+```sh
+./scripts/configure-github-signing-secrets
+```
+
+Pass another `owner/repository` as the first argument when targeting a fork. The script uses an installed `sops`, or runs it ephemerally through Nix when needed, and streams decrypted values directly to `gh secret set` over standard input.
+
+The release signing certificate SHA-256 fingerprint is `78:28:06:C7:EC:B0:51:62:D5:43:BB:9F:80:6F:83:78:C2:B6:F0:F3:59:05:FE:E6:BB:81:4A:42:31:81:3A:6B`.
+
+Keep an offline backup of the JKS and its credentials. Losing the key makes future in-place updates impossible. The existing v0.9.0 GitHub artifact was debug-signed with an ephemeral CI key, so it cannot be upgraded in place to the first stable-signed release; install that first stable-signed build once (uninstalling v0.9.0 if necessary). Subsequent releases update normally as long as their `versionCode` and numeric `versionName` both increase.
 
 ## Test on a device
 
